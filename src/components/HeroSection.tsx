@@ -1,14 +1,23 @@
 import { Sparkles, MapPin, Calendar, Clock } from "lucide-react";
+import amsterdamNight from "@/assets/amsterdam-night.jpg";
+import amsterdamSkyline from "@/assets/amsterdam-skyline.jpg";
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/20" />
+      {/* Background images */}
+      <div className="absolute inset-0">
+        <img 
+          src={amsterdamSkyline} 
+          alt="Amsterdam skyline at night" 
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+      </div>
       
       {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
       
       <div className="relative z-10 section-container text-center py-20">
         {/* Pre-title */}
