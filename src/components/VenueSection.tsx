@@ -25,7 +25,7 @@ const VenueSection = () => {
               {/* YouTube embed */}
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src="https://www.youtube.com/embed/cFtccQXCGdA?rel=0&modestbranding=1"
+                src="https://www.youtube.com/embed/cFtccQXCGdA?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=cFtccQXCGdA"
                 title="A'DAM Lookout Amsterdam"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
