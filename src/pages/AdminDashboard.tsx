@@ -8,6 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { RSVP, RSVPGuest } from "@/types/database";
 import { toast } from "sonner";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 import { 
   LogOut, 
   CheckCircle2, 
@@ -64,9 +67,53 @@ const AdminDashboard = () => {
     fetchRSVPs();
   }, []);
 
+  // Helper function to send WhatsApp notification
+  const sendWhatsAppNotification = async (
+    type: "rsvp" | "guest",
+    id: string,
+    name: string,
+    phone: string,
+    status: "approved" | "rejected",
+    oldStatus?: string
+  ) => {
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/send-whatsapp-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            type,
+            id,
+            name,
+            phone,
+            status,
+            old_status: oldStatus,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("WhatsApp notification error:", errorData);
+        // Don't throw - we don't want to fail the status update if notification fails
+      }
+    } catch (error) {
+      console.error("Error sending WhatsApp notification:", error);
+      // Don't throw - we don't want to fail the status update if notification fails
+    }
+  };
+
   const updateRSVPStatus = async (rsvpId: string, status: "approved" | "rejected") => {
     setUpdating(rsvpId);
     try {
+      // Find the RSVP to get current data
+      const currentRSVP = rsvps.find((rsvp) => rsvp.id === rsvpId);
+      const oldStatus = currentRSVP?.status;
+
       const { error } = await supabase
         .from("rsvps")
         .update({ status })
@@ -82,6 +129,18 @@ const AdminDashboard = () => {
       );
 
       toast.success(`RSVP ${status === "approved" ? "approved" : "rejected"}!`);
+
+      // Send WhatsApp notification immediately
+      if (currentRSVP) {
+        await sendWhatsAppNotification(
+          "rsvp",
+          rsvpId,
+          currentRSVP.full_name,
+          currentRSVP.phone,
+          status,
+          oldStatus
+        );
+      }
     } catch (error) {
       console.error("Error updating RSVP:", error);
       toast.error("Failed to update RSVP status");
@@ -93,6 +152,17 @@ const AdminDashboard = () => {
   const updateGuestStatus = async (guestId: string, status: "approved" | "rejected") => {
     setUpdatingGuest(guestId);
     try {
+      // Find the guest to get current data
+      let currentGuest: RSVPGuest | undefined;
+      for (const rsvp of rsvps) {
+        const guest = rsvp.guests.find((g) => g.id === guestId);
+        if (guest) {
+          currentGuest = guest;
+          break;
+        }
+      }
+      const oldStatus = currentGuest?.status;
+
       const { error } = await supabase
         .from("rsvp_guests")
         .update({ status })
@@ -111,6 +181,18 @@ const AdminDashboard = () => {
       );
 
       toast.success(`Guest ${status === "approved" ? "approved" : "rejected"}!`);
+
+      // Send WhatsApp notification immediately
+      if (currentGuest) {
+        await sendWhatsAppNotification(
+          "guest",
+          guestId,
+          currentGuest.name,
+          currentGuest.phone,
+          status,
+          oldStatus
+        );
+      }
     } catch (error) {
       console.error("Error updating guest:", error);
       toast.error("Failed to update guest status");

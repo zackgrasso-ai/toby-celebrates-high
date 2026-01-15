@@ -1,14 +1,12 @@
 # Send WhatsApp Notification Edge Function
 
-This Supabase Edge Function sends WhatsApp messages via WAHA API when RSVP or guest statuses change to 'approved' or 'rejected'.
+This Supabase Edge Function sends WhatsApp messages via WasenderAPI when RSVP or guest statuses change to 'approved' or 'rejected'.
 
 ## Environment Variables
 
 Set these in your Supabase project dashboard under Edge Functions > Settings:
 
-- `WAHA_API_URL`: The base URL of your WAHA API instance (e.g., `https://waha.example.com`)
-- `WAHA_API_KEY`: (Optional) API key for WAHA authentication
-- `WAHA_SESSION`: (Optional) WhatsApp session name, defaults to `'default'`
+- `WASENDER_API_KEY`: Your WasenderAPI Bearer token (required)
 
 ## Deployment
 

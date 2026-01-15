@@ -1,10 +1,10 @@
 # WhatsApp Notification Setup Guide
 
-This guide explains how to set up WhatsApp notifications via WAHA API when RSVP statuses change to 'approved' or 'rejected'.
+This guide explains how to set up WhatsApp notifications via WasenderAPI when RSVP statuses change to 'approved' or 'rejected'.
 
 ## Prerequisites
 
-1. A WAHA API instance running and accessible
+1. A WasenderAPI account and Bearer token (get from wasenderapi.com)
 2. Supabase CLI installed (`npm install -g supabase`)
 3. Your Supabase project reference and API keys
 
@@ -28,10 +28,9 @@ This guide explains how to set up WhatsApp notifications via WAHA API when RSVP 
 
 4. **Set environment variables** in your Supabase project:
    - Go to your Supabase Dashboard → Edge Functions → Settings
-   - Add the following secrets:
-     - `WAHA_API_URL`: Your WAHA API base URL (e.g., `https://waha.example.com`)
-     - `WAHA_API_KEY`: (Optional) Your WAHA API key if authentication is required
-     - `WAHA_SESSION`: (Optional) WhatsApp session name, defaults to `'default'`
+   - Add the following secret:
+     - `WASENDER_API_KEY`: Your WasenderAPI Bearer token (required)
+       - Example: `990fd7005997e5624204cf64674f7a15d95315e7bee341669fc90125c6870794`
 
 5. **Deploy the function**:
    ```bash
@@ -87,14 +86,14 @@ curl -X POST \
 1. Go to your Supabase Dashboard → Table Editor
 2. Find an RSVP with status 'pending'
 3. Update its status to 'approved' or 'rejected'
-4. Check your WAHA API logs to verify the message was sent
+4. Check your WasenderAPI dashboard to verify the message was sent
 
 ## Phone Number Format
 
-The edge function automatically formats phone numbers for WhatsApp:
-- Removes all non-digit characters (including `+`)
-- Appends `@c.us` suffix (for individual chats)
-- Example: `+1234567890` → `1234567890@c.us`
+The edge function automatically formats phone numbers for WasenderAPI:
+- Ensures the phone number starts with `+`
+- Keeps only digits after the `+` sign
+- Example: `+1234567890` or `1234567890` → `+1234567890`
 
 ## Message Templates
 
@@ -113,14 +112,34 @@ You can customize these messages in `/supabase/functions/send-whatsapp-notificat
 ## Troubleshooting
 
 ### Function not being called
-- Check that the triggers are created: `SELECT * FROM pg_trigger WHERE tgname LIKE '%whatsapp%';`
+
+**Step 1: Run the diagnostic script**
+Run `supabase-check-trigger-setup.sql` in your Supabase SQL Editor to check:
+- If pg_net extension is enabled
+- If the trigger function exists
+- If triggers are created and enabled
+- If database settings are configured
+
+**Step 2: If triggers don't exist, use the simplified setup**
+If the diagnostic shows triggers are missing, use `supabase-trigger-whatsapp-notification-simple.sql`:
+1. Open the file and update:
+   - Replace `ikedowhnswkrrzkgjcrx` with your project reference (if different)
+   - Replace `YOUR_ANON_KEY` with your actual anon key
+2. Run the entire script in Supabase SQL Editor
+
+**Step 3: Test the trigger manually**
+Run `supabase-test-trigger.sql` to test if the trigger fires when you update an RSVP status.
+
+**Quick checks:**
+- Check that triggers are created: `SELECT * FROM pg_trigger WHERE tgname LIKE '%whatsapp%';`
 - Verify pg_net extension is enabled: `SELECT * FROM pg_extension WHERE extname = 'pg_net';`
 - Check database settings: `SHOW app.settings.supabase_url;`
 
-### WAHA API errors
-- Verify `WAHA_API_URL` is set correctly in Edge Function secrets
-- Check that your WAHA instance is accessible and the session is active
-- Verify phone number format is correct (should be digits only + `@c.us`)
+### WasenderAPI errors
+- Verify `WASENDER_API_KEY` is set correctly in Edge Function secrets
+- Check that your WasenderAPI token is valid and has sufficient credits
+- Verify phone number format is correct (should start with `+` followed by digits)
+- Check WasenderAPI dashboard for error messages or rate limits
 
 ### Authentication errors
 - Ensure `app.settings.anon_key` is set in the database
