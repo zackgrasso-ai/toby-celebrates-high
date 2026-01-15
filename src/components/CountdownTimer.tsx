@@ -8,7 +8,7 @@ interface TimeLeft {
 }
 
 const CountdownTimer = () => {
-  const targetDate = new Date("2025-02-21T20:00:00").getTime();
+  const targetDate = new Date("2025-02-21T21:00:00+01:00").getTime();
 
   const calculateTimeLeft = (): TimeLeft => {
     const now = new Date().getTime();
