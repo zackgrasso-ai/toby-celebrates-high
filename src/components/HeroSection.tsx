@@ -1,6 +1,6 @@
 import { Sparkles, MapPin, Calendar, Clock } from "lucide-react";
-import amsterdamNight from "@/assets/amsterdam-night.jpg";
 import amsterdamSkyline from "@/assets/amsterdam-skyline.jpg";
+import CountdownTimer from "./CountdownTimer";
 
 const HeroSection = () => {
   return (
@@ -62,11 +62,17 @@ const HeroSection = () => {
           </div>
         </div>
 
+        {/* Countdown Timer */}
+        <div className="animate-fade-up mb-12" style={{ animationDelay: "0.5s" }}>
+          <p className="text-muted-foreground text-sm uppercase tracking-widest mb-4">Countdown to the celebration</p>
+          <CountdownTimer />
+        </div>
+
         {/* CTA Button */}
         <a 
           href="#rsvp" 
           className="animate-fade-up inline-flex items-center gap-2 bg-gold-gradient text-primary-foreground px-8 py-4 rounded-full font-semibold text-lg hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-primary/25"
-          style={{ animationDelay: "0.6s" }}
+          style={{ animationDelay: "0.7s" }}
         >
           RSVP Now
           <Sparkles className="w-5 h-5" />
