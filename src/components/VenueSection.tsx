@@ -11,10 +11,10 @@ const VenueSection = () => {
             The Venue
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">
-            A'DAM <span className="gold-text">Lookout</span>
+            A'DAM <span className="gold-text">360</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience Amsterdam from 100 meters high. A'DAM Lookout offers breathtaking 360° views of the city, 
+            Experience Amsterdam from 100 meters high. A'DAM 360 offers breathtaking 360° views of the city, 
             making it the perfect backdrop for an unforgettable celebration.
           </p>
         </div>

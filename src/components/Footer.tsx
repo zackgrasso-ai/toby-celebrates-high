@@ -8,7 +8,7 @@ const Footer = () => {
           Made with <Heart className="w-4 h-4 text-primary fill-primary" /> for Toby's 22nd
         </p>
         <p className="text-muted-foreground/60 text-sm mt-2">
-          February 21st, 2025 • A'DAM Lookout, Amsterdam
+          February 21st, 2026 • A'DAM 360, Amsterdam
         </p>
       </div>
     </footer>

@@ -8,7 +8,7 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         <img 
           src="https://www.adam-events.nl/wp-content/uploads/2023/06/the360-inspiratie-02.jpg" 
-          alt="A'DAM Lookout venue" 
+          alt="A'DAM 360 venue" 
           className="absolute inset-0 w-full h-full object-cover opacity-40"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
@@ -44,13 +44,13 @@ const HeroSection = () => {
         <div className="animate-fade-up grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-12" style={{ animationDelay: "0.4s" }}>
           <div className="glass-card p-6 group hover:border-primary/50 transition-all duration-300">
             <Calendar className="w-6 h-6 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-foreground font-medium">February 21st, 2025</p>
-            <p className="text-muted-foreground text-sm">Friday Evening</p>
+            <p className="text-foreground font-medium">February 21st, 2026</p>
+            <p className="text-muted-foreground text-sm">Saturday Evening</p>
           </div>
           
           <div className="glass-card p-6 group hover:border-primary/50 transition-all duration-300">
             <MapPin className="w-6 h-6 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-foreground font-medium">A'DAM Lookout</p>
+            <p className="text-foreground font-medium">A'DAM 360</p>
             <p className="text-muted-foreground text-sm">18th Floor, Adam Tower</p>
           </div>
           

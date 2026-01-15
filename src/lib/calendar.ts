@@ -1,10 +1,10 @@
 // Calendar event details
 const EVENT_DETAILS = {
   title: "Toby's 22nd Birthday Party",
-  description: "Join us for an unforgettable evening of celebration at A'DAM Lookout!",
-  location: "A'DAM Lookout, Overhoeksplein 5, 1031 KS Amsterdam, Netherlands",
-  startDate: new Date("2025-02-21T21:00:00+01:00"), // 21:00 CET
-  endDate: new Date("2025-02-22T03:00:00+01:00"), // 03:00 next day CET
+  description: "Join us for an unforgettable evening of celebration at A'DAM 360!",
+  location: "A'DAM 360, Overhoeksplein 5, 1031 KS Amsterdam, Netherlands",
+  startDate: new Date("2026-02-21T21:00:00+01:00"), // 21:00 CET
+  endDate: new Date("2026-02-22T03:00:00+01:00"), // 03:00 next day CET
 };
 
 // Format date for Google Calendar (YYYYMMDDTHHMMSS)

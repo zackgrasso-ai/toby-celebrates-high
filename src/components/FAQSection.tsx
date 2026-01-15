@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "Where exactly is the venue?",
-    answer: "A'DAM Lookout is located on the 18th floor of the A'DAM Tower in Amsterdam Noord. The address is Overhoeksplein 5, 1031 KS Amsterdam. It's easily accessible by the free ferry from behind Central Station (takes about 3 minutes). Once you arrive, take the elevator to the 18th floor.",
+    answer: "A'DAM 360 is located on the 18th floor of the A'DAM Tower in Amsterdam Noord. The address is Overhoeksplein 5, 1031 KS Amsterdam. It's easily accessible by the free ferry from behind Central Station (takes about 3 minutes). Once you arrive, take the elevator to the 18th floor.",
   },
   {
     question: "How do I get there?",
@@ -28,11 +28,11 @@ const faqs = [
   },
   {
     question: "Will there be food and drinks?",
-    answer: "Absolutely! There will be drinks and food available throughout the evening. The venue offers a great selection of beverages and snacks. If you have any dietary requirements or allergies, please let us know when you RSVP so we can accommodate you.",
+    answer: "There will be no food available at the event. However, the first round of drinks will be free! After that, drinks will be available for purchase at the venue bar.",
   },
   {
     question: "What's the view like?",
-    answer: "The A'DAM Lookout offers incredible 360° panoramic views of Amsterdam from 100 meters above ground. You'll see the entire city skyline, the IJ river, and on a clear day, views stretch for miles. The sunset from up there is absolutely magical!",
+    answer: "The A'DAM 360 offers incredible 360° panoramic views of Amsterdam from 100 meters above ground. You'll see the entire city skyline, the IJ river, and on a clear day, views stretch for miles. The sunset from up there is absolutely magical!",
   },
 ];
 

@@ -8,9 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: ['tobymeertens.nl'],
     hmr: {
       overlay: false,
     },
+  },
+  preview: {
+    allowedHosts: ['tobymeertens.nl'],
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
@@ -19,3 +23,4 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
+
