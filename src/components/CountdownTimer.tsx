@@ -8,11 +8,23 @@ interface TimeLeft {
 }
 
 const CountdownTimer = () => {
-  const targetDate = new Date("2025-02-21T21:00:00+01:00").getTime();
+  const getTargetDateMs = (nowMs: number) => {
+    const now = new Date(nowMs);
+    const year = now.getFullYear();
+
+    // Party starts Feb 21st at 21:00 CET (UTC+01:00)
+    const thisYearTarget = new Date(`${year}-02-21T21:00:00+01:00`).getTime();
+
+    // If the date already passed, count down to next year's Feb 21st.
+    return thisYearTarget > nowMs
+      ? thisYearTarget
+      : new Date(`${year + 1}-02-21T21:00:00+01:00`).getTime();
+  };
 
   const calculateTimeLeft = (): TimeLeft => {
-    const now = new Date().getTime();
-    const difference = targetDate - now;
+    const nowMs = Date.now();
+    const targetMs = getTargetDateMs(nowMs);
+    const difference = targetMs - nowMs;
 
     if (difference <= 0) {
       return { days: 0, hours: 0, minutes: 0, seconds: 0 };
