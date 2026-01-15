@@ -1,5 +1,4 @@
 import { Sparkles, MapPin, Calendar, Clock } from "lucide-react";
-import amsterdamSkyline from "@/assets/amsterdam-skyline.jpg";
 import CountdownTimer from "./CountdownTimer";
 
 const HeroSection = () => {
@@ -8,8 +7,8 @@ const HeroSection = () => {
       {/* Background images */}
       <div className="absolute inset-0">
         <img 
-          src={amsterdamSkyline} 
-          alt="Amsterdam skyline at night" 
+          src="https://www.adam-events.nl/wp-content/uploads/2023/06/the360-inspiratie-02.jpg" 
+          alt="A'DAM Lookout venue" 
           className="absolute inset-0 w-full h-full object-cover opacity-40"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
@@ -58,7 +57,8 @@ const HeroSection = () => {
           <div className="glass-card p-6 group hover:border-primary/50 transition-all duration-300">
             <Clock className="w-6 h-6 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
             <p className="text-foreground font-medium">21:00 - 03:00</p>
-            <p className="text-muted-foreground text-sm">Party all night</p>
+            <p className="text-muted-foreground text-sm">6 hours of celebration</p>
+            <p className="text-muted-foreground text-xs mt-1">Arrive at 21:00 for sunset views</p>
           </div>
         </div>
 

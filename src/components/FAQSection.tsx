@@ -7,28 +7,32 @@ import {
 
 const faqs = [
   {
+    question: "What time does the party start and end?",
+    answer: "The celebration kicks off at 21:00 (9 PM) and goes until 03:00 (3 AM). We recommend arriving right at 21:00 to catch the stunning sunset views from the 18th floor – it's absolutely breathtaking! The party will continue with music, dancing, and great vibes all night long.",
+  },
+  {
     question: "What's the dress code?",
-    answer: "Smart casual to dressy! The venue is upscale, so dress to impress. Think stylish and comfortable – we want you to look great in photos while dancing the night away.",
+    answer: "Smart casual to dressy! The venue is upscale, so dress to impress. Think stylish and comfortable – we want you to look great in photos while dancing the night away. The rooftop can get a bit breezy, so consider bringing a light jacket for the outdoor areas.",
   },
   {
     question: "Where exactly is the venue?",
-    answer: "A'DAM Lookout is located on the 18th floor of the A'DAM Tower in Amsterdam Noord. The address is Overhoeksplein 5, 1031 KS Amsterdam. It's easily accessible by the free ferry from behind Central Station.",
+    answer: "A'DAM Lookout is located on the 18th floor of the A'DAM Tower in Amsterdam Noord. The address is Overhoeksplein 5, 1031 KS Amsterdam. It's easily accessible by the free ferry from behind Central Station (takes about 3 minutes). Once you arrive, take the elevator to the 18th floor.",
   },
   {
-    question: "Is parking available?",
-    answer: "Yes, there's paid parking available at the A'DAM Tower parking garage. However, we recommend using public transport or the free ferry from Central Station, as parking spots can fill up quickly.",
+    question: "How do I get there?",
+    answer: "The easiest way is to take the free ferry from behind Amsterdam Central Station (Buiksloterweg ferry). It runs 24/7 and takes just a few minutes. Alternatively, you can drive – there's paid parking at the A'DAM Tower, but spaces can fill up quickly. We highly recommend public transport or the ferry!",
   },
   {
     question: "Can I bring additional guests?",
-    answer: "Yes! Please add them to your RSVP form so we can ensure we have enough space for everyone. Just include their name and phone number when you RSVP.",
-  },
-  {
-    question: "What time should I arrive?",
-    answer: "We recommend arriving on time to catch the sunset views from the venue – it's absolutely stunning! The exact time will be communicated closer to the date.",
+    answer: "Yes! Please add them to your RSVP form so we can ensure we have enough space and refreshments for everyone. Just include their name and phone number when you RSVP. The more, the merrier!",
   },
   {
     question: "Will there be food and drinks?",
-    answer: "Absolutely! There will be drinks and food available throughout the evening. Let us know of any dietary requirements when you RSVP.",
+    answer: "Absolutely! There will be drinks and food available throughout the evening. The venue offers a great selection of beverages and snacks. If you have any dietary requirements or allergies, please let us know when you RSVP so we can accommodate you.",
+  },
+  {
+    question: "What's the view like?",
+    answer: "The A'DAM Lookout offers incredible 360° panoramic views of Amsterdam from 100 meters above ground. You'll see the entire city skyline, the IJ river, and on a clear day, views stretch for miles. The sunset from up there is absolutely magical!",
   },
 ];
 

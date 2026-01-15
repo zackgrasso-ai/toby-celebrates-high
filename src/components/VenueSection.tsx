@@ -1,4 +1,5 @@
-import { Play } from "lucide-react";
+import { Play, MapPin, Navigation } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const VenueSection = () => {
   return (
@@ -25,8 +26,8 @@ const VenueSection = () => {
               {/* YouTube embed */}
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src="https://www.youtube.com/embed/cFtccQXCGdA?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=cFtccQXCGdA"
-                title="A'DAM Lookout Amsterdam"
+                src="https://www.youtube.com/embed/3miGuEbxxK8?rel=0&modestbranding=1&autoplay=1&mute=1&loop=1&playlist=3miGuEbxxK8"
+                title="Party Celebration"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
@@ -35,6 +36,21 @@ const VenueSection = () => {
 
           {/* Decorative glow */}
           <div className="absolute -inset-4 bg-primary/5 rounded-2xl blur-2xl -z-10" />
+        </div>
+
+        {/* Get Directions Button */}
+        <div className="flex justify-center mt-12">
+          <Button
+            onClick={() => {
+              const address = "Overhoeksplein 5, 1031 KS Amsterdam, Netherlands";
+              const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+              window.open(googleMapsUrl, "_blank");
+            }}
+            className="bg-gold-gradient text-primary-foreground border-primary/50 hover:opacity-90 transition-all"
+          >
+            <Navigation className="w-4 h-4 mr-2" />
+            Get Directions
+          </Button>
         </div>
 
         {/* Feature highlights */}
