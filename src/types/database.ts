@@ -4,6 +4,7 @@ export interface RSVP {
   id: string;
   full_name: string;
   phone: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
 }
@@ -13,6 +14,7 @@ export interface RSVPGuest {
   rsvp_id: string;
   name: string;
   phone: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 
