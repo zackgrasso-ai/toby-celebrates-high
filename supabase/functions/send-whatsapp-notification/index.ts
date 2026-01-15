@@ -115,8 +115,8 @@ serve(async (req) => {
 
     // Create message based on status
     const message = payload.status === 'approved'
-      ? `🎉 Hello ${payload.name}! Your RSVP has been approved. We're excited to celebrate with you!`
-      : `Hello ${payload.name}, we're sorry to inform you that your RSVP could not be approved at this time. If you have any questions, please contact us.`
+      ? `🎉 Hello ${payload.name}! Your RSVP for Toby's 22nd Birthday Party has been approved! We're excited to celebrate with you on February 21st, 2026 at A'DAM 360. The party starts at 21:00. See you there! 🎊`
+      : `Hello ${payload.name}, we're sorry to inform you that your RSVP for Toby's 22nd Birthday Party could not be approved at this time due to capacity limitations. We appreciate your interest and will reach out if space becomes available. If you have any questions, please contact us.`
 
     // Prepare WasenderAPI request
     const wasenderRequest = {

@@ -56,7 +56,7 @@ const HeroSection = () => {
           
           <div className="glass-card p-6 group hover:border-primary/50 transition-all duration-300">
             <Clock className="w-6 h-6 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
-            <p className="text-foreground font-medium">21:00 - 03:00</p>
+            <p className="text-foreground font-medium">21:00 - 02:00</p>
             <p className="text-muted-foreground text-sm">6 hours of celebration</p>
             <p className="text-muted-foreground text-xs mt-1">Arrive at 21:00 for sunset views</p>
           </div>

@@ -8,7 +8,7 @@ import {
 const faqs = [
   {
     question: "What time does the party start and end?",
-    answer: "The celebration kicks off at 21:00 (9 PM) and goes until 03:00 (3 AM). We recommend arriving right at 21:00 to catch the stunning sunset views from the 18th floor – it's absolutely breathtaking! The party will continue with music, dancing, and great vibes all night long.",
+    answer: "The celebration kicks off at 21:00 (9 PM) and goes until 02:00 (2 AM). We recommend arriving right at 21:00 to catch the stunning sunset views from the 18th floor – it's absolutely breathtaking! The party will continue with music, dancing, and great vibes all night long.",
   },
   {
     question: "What's the dress code?",

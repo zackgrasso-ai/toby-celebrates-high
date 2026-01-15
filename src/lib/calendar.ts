@@ -4,7 +4,7 @@ const EVENT_DETAILS = {
   description: "Join us for an unforgettable evening of celebration at A'DAM 360!",
   location: "A'DAM 360, Overhoeksplein 5, 1031 KS Amsterdam, Netherlands",
   startDate: new Date("2026-02-21T21:00:00+01:00"), // 21:00 CET
-  endDate: new Date("2026-02-22T03:00:00+01:00"), // 03:00 next day CET
+  endDate: new Date("2026-02-22T02:00:00+01:00"), // 02:00 next day CET
 };
 
 // Format date for Google Calendar (YYYYMMDDTHHMMSS)
