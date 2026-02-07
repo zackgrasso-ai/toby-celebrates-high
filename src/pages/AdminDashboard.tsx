@@ -19,8 +19,10 @@ import {
   Users, 
   Phone,
   RefreshCw,
-  UserPlus
+  UserPlus,
+  MessageSquarePlus
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
@@ -29,6 +31,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [updatingGuest, setUpdatingGuest] = useState<string | null>(null);
+  const [selectedPeople, setSelectedPeople] = useState<Set<string>>(new Set());
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   const fetchRSVPs = async () => {
     setLoading(true);
@@ -206,6 +210,86 @@ const AdminDashboard = () => {
     navigate("/admin/login", { replace: true });
   };
 
+  // Toggle selection for a person
+  const togglePersonSelection = (personId: string, type: 'rsvp' | 'guest') => {
+    const id = `${type}-${personId}`;
+    setSelectedPeople((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Get all selected people with their details
+  const getSelectedPeopleDetails = () => {
+    const selected: Array<{ name: string; phone: string }> = [];
+    
+    rsvps.forEach((rsvp) => {
+      const rsvpId = `rsvp-${rsvp.id}`;
+      if (selectedPeople.has(rsvpId)) {
+        selected.push({ name: rsvp.full_name, phone: rsvp.phone });
+      }
+      
+      rsvp.guests.forEach((guest) => {
+        const guestId = `guest-${guest.id}`;
+        if (selectedPeople.has(guestId)) {
+          selected.push({ name: guest.name, phone: guest.phone });
+        }
+      });
+    });
+    
+    return selected;
+  };
+
+  // Create WhatsApp group with selected people
+  const createWhatsAppGroup = async () => {
+    const selected = getSelectedPeopleDetails();
+    
+    if (selected.length === 0) {
+      toast.error("Please select at least one person to add to the group");
+      return;
+    }
+
+    setCreatingGroup(true);
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/create-whatsapp-group`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            participants: selected,
+            groupName: "Toby's Birthday Party Group",
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create group");
+      }
+
+      toast.success(`Group creation initiated for ${selected.length} people!`);
+      console.log("Group creation result:", result);
+      
+      // Clear selection after successful creation
+      setSelectedPeople(new Set());
+    } catch (error) {
+      console.error("Error creating WhatsApp group:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to create WhatsApp group");
+    } finally {
+      setCreatingGroup(false);
+    }
+  };
+
   const pendingRSVPs = rsvps.filter((rsvp) => rsvp.status === "pending");
   const approvedRSVPs = rsvps.filter((rsvp) => rsvp.status === "approved");
   const rejectedRSVPs = rsvps.filter((rsvp) => rsvp.status === "rejected");
@@ -240,6 +324,17 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              {selectedPeople.size > 0 && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={createWhatsAppGroup}
+                  disabled={creatingGroup}
+                >
+                  <MessageSquarePlus className={`w-4 h-4 mr-2 ${creatingGroup ? "animate-spin" : ""}`} />
+                  Create Group ({selectedPeople.size})
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -339,6 +434,8 @@ const AdminDashboard = () => {
                   onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
                   updating={updating === rsvp.id}
                   updatingGuest={updatingGuest}
+                  selectedPeople={selectedPeople}
+                  onToggleSelection={togglePersonSelection}
                 />
               ))
             )}
@@ -366,6 +463,8 @@ const AdminDashboard = () => {
                   onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
                   updating={updating === rsvp.id}
                   updatingGuest={updatingGuest}
+                  selectedPeople={selectedPeople}
+                  onToggleSelection={togglePersonSelection}
                 />
               ))
             )}
@@ -393,6 +492,8 @@ const AdminDashboard = () => {
                   onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
                   updating={updating === rsvp.id}
                   updatingGuest={updatingGuest}
+                  selectedPeople={selectedPeople}
+                  onToggleSelection={togglePersonSelection}
                 />
               ))
             )}
@@ -411,9 +512,11 @@ interface RSVPCardProps {
   onGuestReject: (guestId: string) => void;
   updating: boolean;
   updatingGuest: string | null;
+  selectedPeople: Set<string>;
+  onToggleSelection: (personId: string, type: 'rsvp' | 'guest') => void;
 }
 
-const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, updating, updatingGuest }: RSVPCardProps) => {
+const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, updating, updatingGuest, selectedPeople, onToggleSelection }: RSVPCardProps) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -446,6 +549,11 @@ const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, up
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
+              <Checkbox
+                checked={selectedPeople.has(`rsvp-${rsvp.id}`)}
+                onCheckedChange={() => onToggleSelection(rsvp.id, 'rsvp')}
+                className="mr-2"
+              />
               <CardTitle className="text-xl">{rsvp.full_name}</CardTitle>
               {getStatusBadge(rsvp.status)}
             </div>
@@ -525,6 +633,11 @@ const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, up
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
+                        <Checkbox
+                          checked={selectedPeople.has(`guest-${guest.id}`)}
+                          onCheckedChange={() => onToggleSelection(guest.id, 'guest')}
+                          className="mr-1"
+                        />
                         <span className="font-medium">{guest.name}</span>
                         {getStatusBadge(guest.status)}
                       </div>
