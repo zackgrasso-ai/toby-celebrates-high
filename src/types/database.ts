@@ -7,6 +7,9 @@ export interface RSVP {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   updated_at: string;
+  reply_status?: 'yes' | 'no' | null;
+  reply_received_at?: string | null;
+  reply_message?: string | null;
 }
 
 export interface RSVPGuest {
@@ -16,6 +19,9 @@ export interface RSVPGuest {
   phone: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  reply_status?: 'yes' | 'no' | null;
+  reply_received_at?: string | null;
+  reply_message?: string | null;
 }
 
 export interface Database {

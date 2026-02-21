@@ -20,9 +20,21 @@ import {
   Phone,
   RefreshCw,
   UserPlus,
-  MessageSquarePlus
+  MessageSquarePlus,
+  CheckSquare,
+  Square,
+  Send
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Copy, Check } from "lucide-react";
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
@@ -33,6 +45,12 @@ const AdminDashboard = () => {
   const [updatingGuest, setUpdatingGuest] = useState<string | null>(null);
   const [selectedPeople, setSelectedPeople] = useState<Set<string>>(new Set());
   const [creatingGroup, setCreatingGroup] = useState(false);
+  const [showPhoneNumbersDialog, setShowPhoneNumbersDialog] = useState(false);
+  const [phoneNumbersList, setPhoneNumbersList] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const [showReminderDialog, setShowReminderDialog] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
+  const [delayBetweenMessages, setDelayBetweenMessages] = useState<number>(15);
 
   const fetchRSVPs = async () => {
     setLoading(true);
@@ -224,6 +242,42 @@ const AdminDashboard = () => {
     });
   };
 
+  // Select or deselect all people
+  const toggleSelectAll = () => {
+    // Get all possible IDs
+    const allIds = new Set<string>();
+    
+    rsvps.forEach((rsvp) => {
+      allIds.add(`rsvp-${rsvp.id}`);
+      rsvp.guests.forEach((guest) => {
+        allIds.add(`guest-${guest.id}`);
+      });
+    });
+
+    // If all are selected, deselect all. Otherwise, select all.
+    const allSelected = allIds.size > 0 && Array.from(allIds).every(id => selectedPeople.has(id));
+    
+    if (allSelected) {
+      setSelectedPeople(new Set());
+    } else {
+      setSelectedPeople(new Set(allIds));
+    }
+  };
+
+  // Check if all people are selected
+  const areAllSelected = () => {
+    const allIds = new Set<string>();
+    
+    rsvps.forEach((rsvp) => {
+      allIds.add(`rsvp-${rsvp.id}`);
+      rsvp.guests.forEach((guest) => {
+        allIds.add(`guest-${guest.id}`);
+      });
+    });
+
+    return allIds.size > 0 && Array.from(allIds).every(id => selectedPeople.has(id));
+  };
+
   // Get all selected people with their details
   const getSelectedPeopleDetails = () => {
     const selected: Array<{ name: string; phone: string }> = [];
@@ -245,54 +299,119 @@ const AdminDashboard = () => {
     return selected;
   };
 
-  // Create WhatsApp group with selected people
-  const createWhatsAppGroup = async () => {
+  // Show phone numbers dialog for manual copying
+  const showPhoneNumbers = () => {
     const selected = getSelectedPeopleDetails();
     
     if (selected.length === 0) {
-      toast.error("Please select at least one person to add to the group");
+      toast.error("Please select at least one person");
       return;
     }
 
-    setCreatingGroup(true);
+    // Format phone numbers - one per line, with name
+    const formattedNumbers = selected.map(p => {
+      // Format phone number (ensure it starts with +)
+      let phone = p.phone.trim();
+      if (!phone.startsWith('+')) {
+        phone = '+' + phone.replace(/\D/g, '');
+      }
+      return `${phone}`;
+    }).join('\n');
+
+    // Also create a version with just numbers (no names) for easy copying
+    const justNumbers = selected.map(p => {
+      let phone = p.phone.trim();
+      if (!phone.startsWith('+')) {
+        phone = '+' + phone.replace(/\D/g, '');
+      }
+      return phone;
+    }).join('\n');
+
+    setPhoneNumbersList(justNumbers);
+    setShowPhoneNumbersDialog(true);
+    setCopied(false);
+  };
+
+  // Copy phone numbers to clipboard
+  const copyPhoneNumbers = async () => {
+    try {
+      await navigator.clipboard.writeText(phoneNumbersList);
+      setCopied(true);
+      toast.success("Phone numbers copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy:", error);
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  // Send party reminder
+  const sendPartyReminder = async (testMode: boolean = false) => {
+    setSendingReminder(true);
     try {
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/create-whatsapp-group`,
+        `${supabaseUrl}/functions/v1/send-party-reminder`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${supabaseAnonKey}`,
           },
-          body: JSON.stringify({
-            participants: selected,
-            groupName: "Toby's Birthday Party Group",
+          body: JSON.stringify({ 
+            testMode,
+            delayBetweenMessages: delayBetweenMessages
           }),
         }
       );
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to create group");
+        const errorData = await response.text();
+        console.error("Reminder error:", errorData);
+        throw new Error(errorData);
       }
 
-      toast.success(`Group creation initiated for ${selected.length} people!`);
-      console.log("Group creation result:", result);
+      const result = await response.json();
       
-      // Clear selection after successful creation
-      setSelectedPeople(new Set());
+      if (result.success) {
+        toast.success(
+          `Reminders sent! ${result.sent} sent, ${result.failed} failed. Delay: ${result.delayBetweenMessages}s between messages`
+        );
+        setShowReminderDialog(false);
+      } else {
+        throw new Error(result.error || "Failed to send reminders");
+      }
     } catch (error) {
-      console.error("Error creating WhatsApp group:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create WhatsApp group");
+      console.error("Error sending reminders:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send reminders"
+      );
     } finally {
-      setCreatingGroup(false);
+      setSendingReminder(false);
     }
   };
 
   const pendingRSVPs = rsvps.filter((rsvp) => rsvp.status === "pending");
   const approvedRSVPs = rsvps.filter((rsvp) => rsvp.status === "approved");
   const rejectedRSVPs = rsvps.filter((rsvp) => rsvp.status === "rejected");
+
+  // Calculate reply statuses - include all statuses (approved, rejected, etc.) if they have a reply
+  const confirmedRSVPs = rsvps.filter((rsvp) => 
+    rsvp.reply_status === "yes"
+  );
+  const declinedRSVPs = rsvps.filter((rsvp) => 
+    rsvp.reply_status === "no"
+  );
+  
+  // Get confirmed and declined guests - include all statuses if they have a reply
+  const confirmedGuests = rsvps.flatMap(rsvp => 
+    rsvp.guests.filter(guest => guest.reply_status === "yes")
+  );
+  const declinedGuests = rsvps.flatMap(rsvp => 
+    rsvp.guests.filter(guest => guest.reply_status === "no")
+  );
+
+  const totalConfirmed = confirmedRSVPs.length + confirmedGuests.length;
+  const totalDeclined = declinedRSVPs.length + declinedGuests.length;
 
   // Calculate totals including all people
   const totalPeople = rsvps.length + rsvps.reduce((sum, rsvp) => sum + rsvp.guests.length, 0);
@@ -324,17 +443,44 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectAll}
+                disabled={loading || rsvps.length === 0}
+              >
+                {areAllSelected() ? (
+                  <>
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-4 h-4 mr-2" />
+                    Select All
+                  </>
+                )}
+              </Button>
               {selectedPeople.size > 0 && (
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={createWhatsAppGroup}
-                  disabled={creatingGroup}
+                  onClick={showPhoneNumbers}
                 >
-                  <MessageSquarePlus className={`w-4 h-4 mr-2 ${creatingGroup ? "animate-spin" : ""}`} />
-                  Create Group ({selectedPeople.size})
+                  <Phone className="w-4 h-4 mr-2" />
+                  Get Numbers ({selectedPeople.size})
                 </Button>
               )}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowReminderDialog(true)}
+                disabled={loading || totalApprovedAttendees === 0}
+                className="bg-primary"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send Reminder
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -398,17 +544,45 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
+        {/* Reply Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <Card className="glass-card border-green-500/20">
+            <CardHeader className="pb-3">
+              <CardDescription>Confirmed (YES)</CardDescription>
+              <CardTitle className="text-3xl text-green-500">{totalConfirmed}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                {confirmedRSVPs.length} main + {confirmedGuests.length} guests
+              </p>
+            </CardHeader>
+          </Card>
+          <Card className="glass-card border-red-500/20">
+            <CardHeader className="pb-3">
+              <CardDescription>Declined (NO)</CardDescription>
+              <CardTitle className="text-3xl text-red-500">{totalDeclined}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                {declinedRSVPs.length} main + {declinedGuests.length} guests
+              </p>
+            </CardHeader>
+          </Card>
+        </div>
+
         {/* RSVP List */}
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="pending">
               Pending ({pendingRSVPs.length})
             </TabsTrigger>
             <TabsTrigger value="approved">
               Approved ({approvedRSVPs.length})
             </TabsTrigger>
+            <TabsTrigger value="replies">
+              Replies ({totalConfirmed + totalDeclined})
+            </TabsTrigger>
             <TabsTrigger value="rejected">
-              Rejected ({rejectedRSVPs.length})
+              Rejected ({rejectedRSVPs.length + totalDeclined})
+            </TabsTrigger>
+            <TabsTrigger value="declined">
+              Declined ({totalDeclined})
             </TabsTrigger>
           </TabsList>
 
@@ -470,36 +644,343 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="replies" className="space-y-4 mt-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : totalConfirmed === 0 && totalDeclined === 0 ? (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  No replies received yet
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {/* Confirmed Section */}
+                {totalConfirmed > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <h3 className="text-lg font-semibold text-green-500">
+                        Confirmed ({totalConfirmed})
+                      </h3>
+                    </div>
+                    {rsvps
+                      .filter(rsvp => rsvp.reply_status === "yes" || rsvp.guests.some(g => g.reply_status === "yes"))
+                      .map((rsvp) => (
+                        <RSVPCard
+                          key={rsvp.id}
+                          rsvp={rsvp}
+                          onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
+                          onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
+                          onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
+                          onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
+                          updating={updating === rsvp.id}
+                          updatingGuest={updatingGuest}
+                          selectedPeople={selectedPeople}
+                          onToggleSelection={togglePersonSelection}
+                          showReplyStatus={true}
+                        />
+                      ))}
+                  </div>
+                )}
+
+                {/* Declined Section */}
+                {totalDeclined > 0 && (
+                  <div className="space-y-4 mt-8">
+                    <div className="flex items-center gap-2 mb-4">
+                      <XCircle className="w-5 h-5 text-red-500" />
+                      <h3 className="text-lg font-semibold text-red-500">
+                        Declined ({totalDeclined})
+                      </h3>
+                    </div>
+                    {rsvps
+                      .filter(rsvp => rsvp.reply_status === "no" || rsvp.guests.some(g => g.reply_status === "no"))
+                      .map((rsvp) => (
+                        <RSVPCard
+                          key={rsvp.id}
+                          rsvp={rsvp}
+                          onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
+                          onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
+                          onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
+                          onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
+                          updating={updating === rsvp.id}
+                          updatingGuest={updatingGuest}
+                          selectedPeople={selectedPeople}
+                          onToggleSelection={togglePersonSelection}
+                          showReplyStatus={true}
+                        />
+                      ))}
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
           <TabsContent value="rejected" className="space-y-4 mt-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
-            ) : rejectedRSVPs.length === 0 ? (
+            ) : rejectedRSVPs.length === 0 && totalDeclined === 0 ? (
               <Card className="glass-card">
                 <CardContent className="py-12 text-center text-muted-foreground">
                   No rejected RSVPs
                 </CardContent>
               </Card>
             ) : (
-              rejectedRSVPs.map((rsvp) => (
-                <RSVPCard
-                  key={rsvp.id}
-                  rsvp={rsvp}
-                  onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
-                  onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
-                  onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
-                  onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
-                  updating={updating === rsvp.id}
-                  updatingGuest={updatingGuest}
-                  selectedPeople={selectedPeople}
-                  onToggleSelection={togglePersonSelection}
-                />
-              ))
+              <>
+                {/* Show declined RSVPs that replied NO */}
+                {declinedRSVPs.length > 0 && (
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <XCircle className="w-5 h-5 text-red-500" />
+                      <h3 className="text-lg font-semibold text-red-500">
+                        Declined via Reply ({declinedRSVPs.length})
+                      </h3>
+                    </div>
+                    {declinedRSVPs.map((rsvp) => (
+                      <RSVPCard
+                        key={rsvp.id}
+                        rsvp={rsvp}
+                        onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
+                        onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
+                        onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
+                        onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
+                        updating={updating === rsvp.id}
+                        updatingGuest={updatingGuest}
+                        selectedPeople={selectedPeople}
+                        onToggleSelection={togglePersonSelection}
+                        showReplyStatus={true}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Show manually rejected RSVPs */}
+                {rejectedRSVPs.filter(rsvp => rsvp.reply_status !== "no").length > 0 && (
+                  <div className="space-y-4">
+                    {rejectedRSVPs.length > declinedRSVPs.length && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <XCircle className="w-5 h-5 text-red-500" />
+                        <h3 className="text-lg font-semibold text-red-500">
+                          Manually Rejected ({rejectedRSVPs.filter(rsvp => rsvp.reply_status !== "no").length})
+                        </h3>
+                      </div>
+                    )}
+                    {rejectedRSVPs
+                      .filter(rsvp => rsvp.reply_status !== "no")
+                      .map((rsvp) => (
+                        <RSVPCard
+                          key={rsvp.id}
+                          rsvp={rsvp}
+                          onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
+                          onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
+                          onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
+                          onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
+                          updating={updating === rsvp.id}
+                          updatingGuest={updatingGuest}
+                          selectedPeople={selectedPeople}
+                          onToggleSelection={togglePersonSelection}
+                        />
+                      ))}
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="declined" className="space-y-4 mt-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : totalDeclined === 0 ? (
+              <Card className="glass-card">
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  No declined RSVPs
+                </CardContent>
+              </Card>
+            ) : (
+              rsvps
+                .filter(rsvp => rsvp.reply_status === "no" || rsvp.guests.some(g => g.reply_status === "no"))
+                .map((rsvp) => (
+                  <RSVPCard
+                    key={rsvp.id}
+                    rsvp={rsvp}
+                    onApprove={() => updateRSVPStatus(rsvp.id, "approved")}
+                    onReject={() => updateRSVPStatus(rsvp.id, "rejected")}
+                    onGuestApprove={(guestId) => updateGuestStatus(guestId, "approved")}
+                    onGuestReject={(guestId) => updateGuestStatus(guestId, "rejected")}
+                    updating={updating === rsvp.id}
+                    updatingGuest={updatingGuest}
+                    selectedPeople={selectedPeople}
+                    onToggleSelection={togglePersonSelection}
+                    showReplyStatus={true}
+                  />
+                ))
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Phone Numbers Dialog */}
+      <Dialog open={showPhoneNumbersDialog} onOpenChange={setShowPhoneNumbersDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Phone Numbers ({phoneNumbersList.split('\n').filter(n => n.trim()).length})</DialogTitle>
+            <DialogDescription>
+              Copy these phone numbers to add them manually to your WhatsApp group. One number per line.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <textarea
+                readOnly
+                value={phoneNumbersList}
+                className="w-full h-64 p-4 font-mono text-sm border rounded-md bg-muted resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                onClick={(e) => {
+                  (e.target as HTMLTextAreaElement).select();
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Click the text area above to select all, or use the copy button below</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPhoneNumbersDialog(false)}
+            >
+              Close
+            </Button>
+            <Button onClick={copyPhoneNumbers}>
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy All
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Reminder Dialog */}
+      <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Party Reminder</DialogTitle>
+            <DialogDescription>
+              Send a reminder to all {totalApprovedAttendees} approved attendees about the party tonight at 21:00.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Send Options:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => sendPartyReminder(false)}
+                  disabled={sendingReminder}
+                  className="h-auto py-3 flex flex-col items-center gap-1"
+                >
+                  <Send className="w-5 h-5" />
+                  <span className="text-xs">Send Now</span>
+                  <span className="text-xs text-muted-foreground">All attendees</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => sendPartyReminder(true)}
+                  disabled={sendingReminder}
+                  className="h-auto py-3 flex flex-col items-center gap-1"
+                >
+                  <Send className="w-5 h-5" />
+                  <span className="text-xs">Test Mode</span>
+                  <span className="text-xs text-muted-foreground">+31620737097 only</span>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2 pt-2 border-t">
+              <p className="text-sm font-medium">Delay Between Messages:</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Time to wait between sending each reminder (10-20 seconds)
+              </p>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="10"
+                  max="20"
+                  value={delayBetweenMessages}
+                  onChange={(e) => setDelayBetweenMessages(Number(e.target.value))}
+                  className="flex-1"
+                  disabled={sendingReminder}
+                />
+                <span className="text-sm font-medium w-12 text-right">
+                  {delayBetweenMessages}s
+                </span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>10s</span>
+                <span>20s</span>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDelayBetweenMessages(10)}
+                  disabled={sendingReminder}
+                  className="flex-1"
+                >
+                  10s
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDelayBetweenMessages(15)}
+                  disabled={sendingReminder}
+                  className="flex-1"
+                >
+                  15s
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDelayBetweenMessages(20)}
+                  disabled={sendingReminder}
+                  className="flex-1"
+                >
+                  20s
+                </Button>
+              </div>
+            </div>
+
+            {sendingReminder && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Sending reminders with {delayBetweenMessages}s delay between each...</span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowReminderDialog(false)}
+              disabled={sendingReminder}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -514,9 +995,10 @@ interface RSVPCardProps {
   updatingGuest: string | null;
   selectedPeople: Set<string>;
   onToggleSelection: (personId: string, type: 'rsvp' | 'guest') => void;
+  showReplyStatus?: boolean;
 }
 
-const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, updating, updatingGuest, selectedPeople, onToggleSelection }: RSVPCardProps) => {
+const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, updating, updatingGuest, selectedPeople, onToggleSelection, showReplyStatus = false }: RSVPCardProps) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -543,6 +1025,37 @@ const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, up
     }
   };
 
+  const getReplyBadge = (replyStatus?: string | null, replyReceivedAt?: string | null) => {
+    if (!replyStatus) return null;
+    
+    if (replyStatus === "yes") {
+      return (
+        <Badge className="bg-green-600/20 text-green-600 border-green-600/50">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Confirmed
+          {replyReceivedAt && (
+            <span className="ml-1 text-xs">
+              ({new Date(replyReceivedAt).toLocaleDateString()})
+            </span>
+          )}
+        </Badge>
+      );
+    } else if (replyStatus === "no") {
+      return (
+        <Badge className="bg-red-600/20 text-red-600 border-red-600/50">
+          <XCircle className="w-3 h-3 mr-1" />
+          Declined
+          {replyReceivedAt && (
+            <span className="ml-1 text-xs">
+              ({new Date(replyReceivedAt).toLocaleDateString()})
+            </span>
+          )}
+        </Badge>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card className="glass-card">
       <CardHeader>
@@ -556,6 +1069,7 @@ const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, up
               />
               <CardTitle className="text-xl">{rsvp.full_name}</CardTitle>
               {getStatusBadge(rsvp.status)}
+              {showReplyStatus && getReplyBadge(rsvp.reply_status, rsvp.reply_received_at)}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="w-4 h-4" />
@@ -640,6 +1154,7 @@ const RSVPCard = ({ rsvp, onApprove, onReject, onGuestApprove, onGuestReject, up
                         />
                         <span className="font-medium">{guest.name}</span>
                         {getStatusBadge(guest.status)}
+                        {showReplyStatus && getReplyBadge(guest.reply_status, guest.reply_received_at)}
                       </div>
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Phone className="w-3 h-3" />
